@@ -20,16 +20,20 @@ app.get('/', function (req, res) {
 
 app.listen(port, function () {
     console.log('Vaccine service on port 💣',port);
-    cron.schedule('*/5 * * * *', () => {
-        console.log(new Date().toLocaleTimeString());
+    cron.schedule('*/1 * * * *', () => {
         checkAvailability();
     });
   });
 
 
 function checkAvailability () {
-    const date = new Date().toLocaleDateString().replace(/\//g, '-');
-    axios.get(`https://cdn-api.co-vin.in/api/v2/appointment/sessions/public/calendarByDistrict?district_id=650&date=${date}`)
+    let today = new Date();
+    const dd = String(today.getDate()).padStart(2, '0');
+    const mm = String(today.getMonth() + 1).padStart(2, '0');
+    const yyyy = today.getFullYear();
+    today = dd + '-' + mm + '-' + yyyy;
+
+    axios.get(`https://cdn-api.co-vin.in/api/v2/appointment/sessions/public/calendarByDistrict?district_id=650&date=${today}`)
     .then((res) => {
         const centerData = res.data.centers.filter((item) => item.center_id ==  centerId);
         let flag = false;
@@ -41,6 +45,7 @@ function checkAvailability () {
                 return `Unavailable, ${item.date}, ${item.available_capacity_dose1}`;
             }
         });
+        console.log(new Date().toLocaleTimeString(), JSON.stringify(result));
         if(flag) {
             mailGun(emailList, result, false);
         }
