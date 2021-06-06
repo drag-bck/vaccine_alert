@@ -1,4 +1,4 @@
 /node_modules/
 .serverless
-/data.log
-/error.log
+data.log
+error.log
