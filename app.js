@@ -6,6 +6,7 @@ const sgMail = require('@sendgrid/mail');
 const compression = require('compression');
 const helmet = require('helmet');
 const path = require('path');
+const fs = require('fs');
 
 const port = process.env.PORT||3000;
 app.use(compression());
@@ -45,12 +46,16 @@ function checkAvailability () {
                 return `Unavailable, ${item.date}, ${item.available_capacity_dose1}`;
             }
         });
+        const logArr = result;
+        logArr.splice(0, 0, new Date().toLocaleString());
+        logger(logArr, 'data.log');
         console.log(new Date().toLocaleTimeString(), JSON.stringify(result));
         if(flag) {
             mailGun(emailList, result, false);
         }
     })
     .catch((err) => {
+        logger(`ERROR: AXIOS, while fetching data.\n' ${err}`,'error.log');
         console.log('ERROR: AXIOS, while fetching data.\n', err);
         mailGun(emailList, JSON.stringify(`ERROR: AXIOS, while fetching data.\n ${err}`), true);
     });
@@ -72,7 +77,8 @@ function mailGun (mailAddress, message, isError) {
         console.log('Email sent')
         })
         .catch((error) => {
-        console.error('ERROR SGMAIL: ', error)
+        logger(`ERROR SGMAIL: \n' ${error}`,'error.log');
+        console.error('ERROR SGMAIL: ', error);
     });
 };
 
@@ -86,4 +92,12 @@ function generateHtml(message) {
             ${temp}
         </ul>
     `);
+}
+
+function logger(obj, fileName) {
+    fs.appendFile(`/Users/amitkumar/Desktop/vaccine_alert/${fileName}`, JSON.stringify(obj) + '\n', function(err) {
+        if(err) {
+            return console.log(err);
+        }
+    }); 
 }
