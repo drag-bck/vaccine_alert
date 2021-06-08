@@ -7,6 +7,7 @@ const compression = require('compression');
 const helmet = require('helmet');
 const path = require('path');
 const fs = require('fs');
+const chalk = require('chalk');
 
 const port = process.env.PORT||3000;
 app.use(compression());
@@ -24,7 +25,7 @@ app.listen(port, function () {
     cron.schedule('*/1 * * * *', () => {
         checkAvailability();
     });
-  });
+});
 
 
 function checkAvailability () {
@@ -46,10 +47,16 @@ function checkAvailability () {
                 return `Unavailable, ${item.date}, ${item.available_capacity_dose1}`;
             }
         });
-        const logArr = result;
+        const logArr = JSON.parse(JSON.stringify(result));
         logArr.splice(0, 0, new Date().toLocaleString());
         logger(logArr, 'data.log');
-        console.log(new Date().toLocaleTimeString(), JSON.stringify(result));
+
+        if(flag) {
+            console.log(chalk.green(new Date().toLocaleTimeString(), JSON.stringify(result)));
+        } else {
+            console.log(chalk.red(new Date().toLocaleTimeString(), JSON.stringify(result)));
+        }
+
         if(flag) {
             mailGun(emailList, result, false);
         }
